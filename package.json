@@ -1,7 +1,7 @@
 {
     "name": "flashback-stack",
-    "version": "1.0.0",
-    "description": "Tiny time‑travel (undo/redo) stack",
+    "version": "1.1.0",
+    "description": "Tiny time‑travel stack",
     "type": "module",
     "publishConfig": {
         "access": "public",
