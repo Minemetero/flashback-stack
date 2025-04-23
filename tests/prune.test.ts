@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import flashback from '../src/flashback'
+import flashback from '../src/index'
 
 describe('Timeline.prune()', () => {
     it('removes the single oldest snapshot when called with no args', () => {

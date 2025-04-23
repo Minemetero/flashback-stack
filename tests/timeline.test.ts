@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import flashback from '../src/flashback'
+import flashback from '../src/index'
 
 describe('Timeline basics', () => {
     it('save() pushes a snapshot and undo()/redo() traverse correctly', () => {
