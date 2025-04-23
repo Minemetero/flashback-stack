@@ -1,187 +1,87 @@
-# Flashback Stack – API Reference
+# Flashback Stack
 
-> A micro-sized, zero-dependency **undo / redo timeline** for any serialisable
-> JavaScript / TypeScript state.
-
-```
-npm i flashback-stack         # ESM only, requires Node ≥ 20
-```
+A **micro-sized**, zero-dependency **undo/redo timeline** for any serializable JavaScript/TypeScript state. Use it for time-travel debugging, state management, document editors, games, and more.
 
 ---
 
-## Table of contents
+## Table of Contents
 
-1. [`flashback()` factory](#flashback-factory)
-2. [`Timeline<T>` interface](#timelinet-interface)  
-   2.1 [`state`](#state)  
-   2.2 [`save()`](#save-next)  
-   2.3 [`change()`](#change-mutator)  
-   2.4 [`undo()` / `redo()`](#undo--redo)  
-   2.5 [`canUndo` / `canRedo`](#canundo--canredo)  
-   2.6 [`clear()`](#clear)  
-   2.7 [`prune()`](#prune-amount--t)
-3. [Typical usage patterns](#typical-usage-patterns)
-4. [FAQ & edge-cases](#faq)
+1. [Installation](#installation)  
+2. [Quick Start](#quick-start)  
+3. [Features](#features)  
+4. [API Reference](#api-reference)  
+5. [Examples](#examples)  
+6. [Code of Conduct](#code-of-conduct)  
+7. [License](#license)  
 
 ---
 
-## `flashback()` factory
+## Installation
+
+```bash
+npm install flashback-stack
+# Requires Node ≥ 20, ESM-only
+```
+
+## Quick Start
 
 ```ts
-function flashback<T>(
-    initial: T, // first snapshot (required)
-    limit?: number // [optional] hard cap on undo history *
-): Timeline<T>
+import flashback from 'flashback-stack'
+
+// 1. Create a timeline with initial state
+const timeline = flashback({ count: 0 })
+
+// 2. Make changes
+timeline.change(draft => {
+  draft.count++
+})
+
+// 3. Undo/redo
+timeline.undo()  // { count: 0 }
+timeline.redo()  // { count: 1 }
+
+// 4. Inspect state
+console.log(timeline.state) // { count: 1 }
 ```
 
-| Parameter | Type      | Description                                                                                                                                                                |
-| --------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `initial` | `T`       | The first state of your application or component.                                                                                                                          |
-| `limit`   | `number?` | **Deprecated in 1.0.x**. Sets a soft maximum for undo history; nothing is removed automatically. Instead, call `timeline.prune()` when _you_ decide history should shrink. |
+## Features
 
-**Return value:** a live `Timeline<T>` object (documented below).
+- 🚀 **Tiny & Fast**: ~200 LOC, zero dependencies, O(1) operations  
+- 🔒 **Type Safe**: Full TypeScript definitions  
+- 🧠 **Smart**: Deep clones via `structuredClone`  
+- 🔄 **Flexible**: Sync / async compression hooks  
+- 🧩 **Simple API**: Only 8 methods to learn  
 
----
+## API Reference
 
-## `Timeline<T>` interface
+For full details, see [API.md](./API.md).
 
-```ts
-interface Timeline<T> {
-  readonly state: T
-  save(next: T): void
-  change(mutator: (draft: T) => void): void
-  undo(): boolean
-  redo(): boolean
-  readonly canUndo: boolean
-  readonly canRedo: boolean
-  clear(): void
-  prune(amount?: number): T[]
-```
+## Examples
 
-### `state`
-
-_Getter._ The most-recent committed snapshot.
-
-```ts
-console.log(timeline.state) // always deep-frozen copy
-```
-
----
-
-### `save(next)`
-
-Pushes an **entire copy** of `next` onto the undo stack and resets the redo
-buffer.
-
-```ts
-timeline.save(newState)
-```
-
----
-
-### `change(mutator)`
-
-Like [_Immer_](https://immerjs.github.io/immer/) in one line:
-
-```ts
-timeline.change(draft => draft.count++)
-```
-
-Internally `state` is cloned (`structuredClone`), the draft is passed to your
-function, and the draft becomes the next committed snapshot.
-
----
-
-### `undo()` / `redo()`
-
-```ts
-if (timeline.undo()) {
-    console.log('stepped back ➜', timeline.state)
-}
-```
-
-Both return `true` on success, `false` when the corresponding stack is empty.
-
----
-
-### `canUndo` / `canRedo`
-
-Booleans you can bind to **toolbar buttons**:
-
-```html
-<button :disabled="!tl.canUndo">Undo</button>
-```
-
----
-
-### `clear()`
-
-Empties **both** history stacks but leaves the current `state` intact.
-
----
-
-### `prune(amount = 1): T[]` <a id="prune-amount--t"></a>
-
-Removes `amount` **oldest** snapshots from the _undo_ history and returns them
-in eviction order.
-
-```ts
-const removed = timeline.prune(10) // deletes bottom-10
-console.log(`freed ${removed.length} snapshots`)
-```
-
-- If `amount` > `undo.length`, everything is removed without error.
-- Calling `prune()` with no argument deletes exactly one snapshot.
-
-This manual control is preferred to the old automatic `limit` trimming, because
-you decide **when** to free memory (e.g. after a prompt or when the stack size
-warning turns red).
-
----
-
-## Typical usage patterns
-
-### Time-travel debugging
+### Time-travel Keyboard Shortcuts
 
 ```ts
 const tl = flashback(appState)
 
-hook.onMessage(msg => {
-    tl.change(s => reducer(s, msg))
-})
-
 window.addEventListener('keydown', e => {
-    if (e.ctrlKey && e.key === 'z') tl.undo()
-    if (e.ctrlKey && e.key === 'y') tl.redo()
+  if (e.ctrlKey && e.key === 'z') tl.undo()
+  if (e.ctrlKey && e.key === 'y') tl.redo()
 })
 ```
 
-### Bounded history
+### State Compression
 
 ```ts
-const MAX = 100
-if (timeline.canUndo && timeline.prune(1).length) {
-    console.log('history trimmed to', MAX, 'entries')
-}
+const tl = flashback(initialState, async state => {
+  // Compress or prune before saving
+  return selectivelyKeep(state)
+})
 ```
 
-Call this after a `save()` or on a timer.
+## Code of Conduct
 
-### Resource clean-up
+We want everyone to feel welcome and be able to contribute. Please read our [Code of Conduct](./CODE_OF_CONDUCT.md) before getting started—thank you for helping us keep this community respectful and inclusive!
 
-Snapshots may include file handles or WebGL textures:
+## License
 
-```ts
-tl.prune(5).forEach(tex => tex.dispose())
-```
-
----
-
-## FAQ
-
-| Question                                | Answer                                                                                                           |
-| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| _Is it safe for React/Vue/Solid state?_ | Yes—`save()` and `change()` deep-clone with `structuredClone`, so the timeline owns its own immutable snapshots. |
-| _Why not JSON clone?_                   | `structuredClone` keeps `Map`, `Set`, `Date`, typed arrays, etc.                                                 |
-| _Performance?_                          | Push/undo/redo are **O(1)** array operations. Cloning dominate cost—measure your state size.                     |
-| _Can I serialise the whole timeline?_   | Sure: `JSON.stringify({ undo, redo, state })`.                                                                   |
+Distributed under the MIT License. See [LICENSE](./LICENSE) for details.
