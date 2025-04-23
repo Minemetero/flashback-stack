@@ -3,6 +3,10 @@
     "version": "1.0.0",
     "description": "Tiny time‑travel (undo/redo) stack",
     "type": "module",
+    "publishConfig": {
+        "access": "public",
+        "git-checks": false
+    },
     "exports": {
         ".": "./dist/index.js"
     },
