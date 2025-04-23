@@ -1,0 +1,30 @@
+# Node / pnpm
+node_modules/
+.pnpm-state/
+
+# Build output
+dist/
+coverage/
+*.tsbuildinfo
+*.log
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Misc
+.env
+
+.pnp.*
+*.tgz
+
+.env.*.local
+
+/.turbo/
+.cache/
+.eslintcache
+
+*.swp
+*.swo

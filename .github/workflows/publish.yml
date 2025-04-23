@@ -1,0 +1,37 @@
+name: Publish
+
+on:
+    push:
+        tags: ['v*.*.*']
+
+jobs:
+    publish:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: 🧾 Checkout code
+              uses: actions/checkout@v4
+
+            - name: 🐣 Set up pnpm
+              uses: pnpm/action-setup@v2
+              with:
+                  version: 9
+                  run_install: false
+
+            - name: 🐍 Set up Node 20 & npm auth
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+                  registry-url: https://registry.npmjs.org/
+                  cache: pnpm
+
+            - name: 📦 Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: 🏗️  Build library
+              run: pnpm run build
+
+            - name: 🚀 Publish to npm
+              run: pnpm publish --access public
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

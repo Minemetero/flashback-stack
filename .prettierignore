@@ -1,0 +1,13 @@
+# Build artefacts
+dist/
+coverage/
+*.tsbuildinfo
+
+# Dependency directories
+node_modules/
+.pnpm-state/
+
+# Misc
+.vscode/
+.idea/
+.DS_Store

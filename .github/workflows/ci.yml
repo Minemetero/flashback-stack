@@ -1,0 +1,50 @@
+name: CI
+
+on:
+    push:
+    pull_request:
+
+jobs:
+    build-test:
+        runs-on: ubuntu-latest
+
+        strategy:
+            matrix:
+                node-version: [20.x]
+
+        steps:
+            - name: 🧾 Checkout code
+              uses: actions/checkout@v4
+
+            - name: 🐣 Set up pnpm
+              uses: pnpm/action-setup@v2
+              with:
+                  version: 9
+                  run_install: false
+
+            - name: 🐍 Set up Node ${{ matrix.node-version }}
+              uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ matrix.node-version }}
+                  cache: pnpm
+
+            - name: 📦 Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: 🎨 Prettier format check
+              run: pnpm run format:check
+
+            # - name: 🔍 ESLint
+            #   run: pnpm run lint
+
+            - name: 🧪 Run tests with coverage
+              run: pnpm run test -- --coverage
+
+            - name: 🏗️  Build library
+              run: pnpm run build
+
+            - name: 📤 Upload dist artifacts
+              uses: actions/upload-artifact@v4
+              with:
+                  name: dist
+                  path: dist
