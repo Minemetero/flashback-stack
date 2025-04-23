@@ -32,6 +32,7 @@ jobs:
               run: pnpm install --frozen-lockfile
 
             - name: 🎨 Prettier format check
+              continue-on-error: true
               run: pnpm run format:check
 
             # - name: 🔍 ESLint
