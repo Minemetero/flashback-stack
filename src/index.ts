@@ -20,12 +20,14 @@ export interface Timeline<T> {
     prune(amount?: number): T[]
 }
 
+type CompressionHook<T> = (state: T) => Promise<T> | T
+
 /**
  * Create a new undo/redo timeline.
  * @param initial	first value
- * @param limit		max snapshots to keep (optional)
+ * @param compress	optional hook to compress snapshots before storing
  */
-export default function flashback<T>(initial: T, limit?: number): Timeline<T> {
+export default function flashback<T>(initial: T, compress?: CompressionHook<T>): Timeline<T> {
     let state = initial
     const undo: T[] = []
     const redo: T[] = []
@@ -39,8 +41,10 @@ export default function flashback<T>(initial: T, limit?: number): Timeline<T> {
         return removed
     }
 
-    const snapshot = (next: T) => {
-        undo.push(structuredClone(state))
+    const snapshot = async (next: T) => {
+        const currentState = structuredClone(state)
+        const compressedState = compress ? await compress(currentState) : currentState
+        undo.push(compressedState)
         redo.length = 0
         state = next
     }
