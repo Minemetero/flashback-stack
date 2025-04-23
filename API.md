@@ -15,9 +15,9 @@ function flashback<T>(
 ): Timeline<T>
 ```
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `initial` | `T` | The first state of your application or component. |
+| Parameter  | Type                  | Description                                                                                    |
+| ---------- | --------------------- | ---------------------------------------------------------------------------------------------- |
+| `initial`  | `T`                   | The first state of your application or component.                                              |
 | `compress` | `CompressionHook<T>?` | Optional hook to transform/compress snapshots before storing in history. Can be sync or async. |
 
 **Return value:** a live `Timeline<T>` object.
@@ -107,25 +107,26 @@ type CompressionHook<T> = (state: T) => Promise<T> | T
 ```
 
 Example usage:
+
 ```ts
 // Simple compression
-const timeline = flashback(initialState, (state) => {
-    return JSON.parse(JSON.stringify(state));
-});
+const timeline = flashback(initialState, state => {
+    return JSON.parse(JSON.stringify(state))
+})
 
 // Async compression
-const timeline = flashback(initialState, async (state) => {
-    const compressed = await compressLargeData(state);
-    return compressed;
-});
+const timeline = flashback(initialState, async state => {
+    const compressed = await compressLargeData(state)
+    return compressed
+})
 
 // Selective storage
-const timeline = flashback(initialState, (state) => {
+const timeline = flashback(initialState, state => {
     return {
         essential: state.essential,
-        timestamp: Date.now()
-    };
-});
+        timestamp: Date.now(),
+    }
+})
 ```
 
 ## Performance Considerations
@@ -138,6 +139,7 @@ const timeline = flashback(initialState, (state) => {
 ## Serialization
 
 The timeline can be serialized:
+
 ```ts
 JSON.stringify({ undo, redo, state })
 ```
@@ -146,4 +148,4 @@ JSON.stringify({ undo, redo, state })
 
 - Fully typed with TypeScript
 - Works with any serializable state type
-- Maintains type safety through compression hooks 
+- Maintains type safety through compression hooks

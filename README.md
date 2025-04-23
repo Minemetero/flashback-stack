@@ -6,13 +6,13 @@ A **micro-sized**, zero-dependency **undo/redo timeline** for any serializable J
 
 ## Table of Contents
 
-1. [Installation](#installation)  
-2. [Quick Start](#quick-start)  
-3. [Features](#features)  
-4. [API Reference](#api-reference)  
-5. [Examples](#examples)  
-6. [Code of Conduct](#code-of-conduct)  
-7. [License](#license)  
+1. [Installation](#installation)
+2. [Quick Start](#quick-start)
+3. [Features](#features)
+4. [API Reference](#api-reference)
+5. [Examples](#examples)
+6. [Code of Conduct](#code-of-conduct)
+7. [License](#license)
 
 ---
 
@@ -33,12 +33,12 @@ const timeline = flashback({ count: 0 })
 
 // 2. Make changes
 timeline.change(draft => {
-  draft.count++
+    draft.count++
 })
 
 // 3. Undo/redo
-timeline.undo()  // { count: 0 }
-timeline.redo()  // { count: 1 }
+timeline.undo() // { count: 0 }
+timeline.redo() // { count: 1 }
 
 // 4. Inspect state
 console.log(timeline.state) // { count: 1 }
@@ -46,11 +46,11 @@ console.log(timeline.state) // { count: 1 }
 
 ## Features
 
-- 🚀 **Tiny & Fast**: ~200 LOC, zero dependencies, O(1) operations  
-- 🔒 **Type Safe**: Full TypeScript definitions  
-- 🧠 **Smart**: Deep clones via `structuredClone`  
-- 🔄 **Flexible**: Sync / async compression hooks  
-- 🧩 **Simple API**: Only 8 methods to learn  
+- 🚀 **Tiny & Fast**: ~200 LOC, zero dependencies, O(1) operations
+- 🔒 **Type Safe**: Full TypeScript definitions
+- 🧠 **Smart**: Deep clones via `structuredClone`
+- 🔄 **Flexible**: Sync / async compression hooks
+- 🧩 **Simple API**: Only 8 methods to learn
 
 ## API Reference
 
@@ -64,8 +64,8 @@ For full details, see [API.md](./API.md).
 const tl = flashback(appState)
 
 window.addEventListener('keydown', e => {
-  if (e.ctrlKey && e.key === 'z') tl.undo()
-  if (e.ctrlKey && e.key === 'y') tl.redo()
+    if (e.ctrlKey && e.key === 'z') tl.undo()
+    if (e.ctrlKey && e.key === 'y') tl.redo()
 })
 ```
 
@@ -73,8 +73,8 @@ window.addEventListener('keydown', e => {
 
 ```ts
 const tl = flashback(initialState, async state => {
-  // Compress or prune before saving
-  return selectivelyKeep(state)
+    // Compress or prune before saving
+    return selectivelyKeep(state)
 })
 ```
 
