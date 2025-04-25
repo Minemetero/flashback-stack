@@ -10,93 +10,93 @@ npm i flashback-stack         # ESM only, requires Node ≥ 20
 
 ```ts
 function flashback<T>(
-    initial: T, // first snapshot (required)
-    compress?: CompressionHook<T> // [optional] hook to compress snapshots
+    initial: T,                            // first snapshot (required)
+    compress?: CompressionHook<T>,         // [optional] hook to compress snapshots
+    options?: { maxHistory?: number }      // [optional] cap on stored undo snapshots
 ): Timeline<T>
-```
+``` 
 
-| Parameter  | Type                  | Description                                                                                    |
-| ---------- | --------------------- | ---------------------------------------------------------------------------------------------- |
-| `initial`  | `T`                   | The first state of your application or component.                                              |
-| `compress` | `CompressionHook<T>?` | Optional hook to transform/compress snapshots before storing in history. Can be sync or async. |
+| Parameter    | Type                             | Description                                                                                                  |
+| ------------ | -------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `initial`    | `T`                              | The first state of your application or component.                                                            |
+| `compress`   | `CompressionHook<T>?`            | Optional hook to transform/compress snapshots before storing. Can be sync or async.                          |
+| `options`    | `{ maxHistory?: number }?`       | If provided, automatically evicts oldest snapshots when the undo stack exceeds this size.                    |
 
 **Return value:** a live `Timeline<T>` object.
+
+---
 
 ## `Timeline<T>` interface
 
 ```ts
 interface Timeline<T> {
-    readonly state: T
-    save(next: T): void
-    change(mutator: (draft: T) => void): void
-    undo(): boolean
-    redo(): boolean
-    readonly canUndo: boolean
-    readonly canRedo: boolean
-    clear(): void
-    prune(amount?: number): T[]
+  /** Always returns a fresh deep-clone of the current state. */
+  readonly state: T
+
+  /** Push a complete snapshot and reset redo; returns `this` for chaining. */
+  save(next: T): Promise<this>
+
+  /** Mutate a draft of state, snapshot result; returns `this`. */
+  change(mutator: (draft: T) => void): Promise<this>
+
+  /** Step backward; returns `true` on success, `false` if no history. */
+  undo(): boolean
+
+  /** Step forward; returns `true` on success, `false` if no redo. */
+  redo(): boolean
+
+  /** Whether there is at least one undo snapshot. */
+  readonly canUndo: boolean
+
+  /** Whether there is at least one redo snapshot. */
+  readonly canRedo: boolean
+
+  /** Clear both undo & redo stacks (current state remains). */
+  clear(): void
+
+  /** Remove `n` oldest undo snapshots and return them. */
+  prune(amount?: number): T[]
 }
-```
+``` 
 
 ### `state`
 
-_Getter._ The most-recent committed snapshot.
-
-```ts
-console.log(timeline.state) // always deep-frozen copy
-```
+_Getter._ Returns a deep-cloned copy of the internal state (ensuring immutability). 
 
 ### `save(next)`
 
-Pushes an **entire copy** of `next` onto the undo stack and resets the redo buffer.
-
-```ts
-timeline.save(newState)
-```
+Pushes a **complete** snapshot (after optional compression) onto the undo stack, clears redo, and makes `next` the new current state. Returns a `Promise<this>` so you can `await` or chain calls. 
 
 ### `change(mutator)`
 
-Like [_Immer_](https://immerjs.github.io/immer/) in one line:
-
-```ts
-timeline.change(draft => draft.count++)
-```
-
-Internally `state` is cloned (`structuredClone`), the draft is passed to your function, and the draft becomes the next committed snapshot.
+Clones current state, applies your `mutator(draft)`, then snapshots the result. Returns a `Promise<this>`. 
 
 ### `undo()` / `redo()`
 
 ```ts
-if (timeline.undo()) {
-    console.log('stepped back ➜', timeline.state)
+if (await timeline.undo()) {
+  console.log('stepped back ➜', timeline.state)
 }
 ```
 
-Both return `true` on success, `false` when the corresponding stack is empty.
+Return `true` on success, `false` when no history. 
 
 ### `canUndo` / `canRedo`
 
-Booleans you can bind to **toolbar buttons**:
+Booleans you can bind to UI controls:
 
 ```html
 <button :disabled="!tl.canUndo">Undo</button>
-```
+``` 
 
 ### `clear()`
 
-Empties **both** history stacks but leaves the current `state` intact.
+Empties both history stacks but leaves the current `state` intact. 
 
 ### `prune(amount = 1): T[]`
 
-Removes `amount` **oldest** snapshots from the _undo_ history and returns them in eviction order.
+Removes the `amount` **oldest** undo snapshots via `splice(0, amount)`, returns them in eviction order. 
 
-```ts
-const removed = timeline.prune(10) // deletes bottom-10
-console.log(`freed ${removed.length} snapshots`)
-```
-
-- If `amount` > `undo.length`, everything is removed without error.
-- Calling `prune()` with no argument deletes exactly one snapshot.
 
 ## Compression Hook
 

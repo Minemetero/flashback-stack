@@ -6,13 +6,13 @@ A **micro-sized**, zero-dependency **undo/redo timeline** for any serializable J
 
 ## Table of Contents
 
-1. [Installation](#installation)
-2. [Quick Start](#quick-start)
-3. [Features](#features)
-4. [API Reference](#api-reference)
-5. [Examples](#examples)
-6. [Code of Conduct](#code-of-conduct)
-7. [License](#license)
+1. [Installation](#installation)  
+2. [Quick Start](#quick-start)  
+3. [Features](#features)  
+4. [API Reference](#api-reference)  
+5. [Examples](#examples)  
+6. [Code of Conduct](#code-of-conduct)  
+7. [License](#license)  
 
 ---
 
@@ -28,59 +28,55 @@ npm install flashback-stack
 ```ts
 import flashback from 'flashback-stack'
 
-// 1. Create a timeline with initial state
-const timeline = flashback({ count: 0 })
+async function demo() {
+  // 1. Create a timeline with a 50-entry cap:
+  const tl = flashback({ count: 0 }, undefined, { maxHistory: 50 })
 
-// 2. Make changes
-timeline.change(draft => {
-    draft.count++
-})
+  // 2. Make a change (async):
+  await tl.change(draft => {
+    draft.count += 2
+  })
+  console.log(tl.state) // { count: 2 }
 
-// 3. Undo/redo
-timeline.undo() // { count: 0 }
-timeline.redo() // { count: 1 }
+  // 3. Save an explicit state:
+  await tl.save({ count: 42 })
 
-// 4. Inspect state
-console.log(timeline.state) // { count: 1 }
+  // 4. Undo / redo:
+  tl.undo()              // returns true
+  console.log(tl.state)  // { count: 2 }
+  tl.redo()
+  console.log(tl.state)  // { count: 42 }
+}
+
+demo()
 ```
 
 ## Features
 
-- 🚀 **Tiny & Fast**: ~200 LOC, zero dependencies, O(1) operations
-- 🔒 **Type Safe**: Full TypeScript definitions
-- 🧠 **Smart**: Deep clones via `structuredClone`
-- 🔄 **Flexible**: Sync / async compression hooks
-- 🧩 **Simple API**: Only 8 methods to learn
+- 🚀 **Tiny & Fast**: ~200 LOC, zero dependencies, O(1) undo/redo operations  
+- 🔒 **Type Safe**: Full TypeScript definitions  
+- 🧠 **Immutable**: Internally deep-frozen state with fresh clones on access  
+- 🔄 **Async & Chainable**: `save()`/`change()` return `Promise<this>` for `await` or chaining  
+- 🧩 **Flexible**: Sync/async compression hooks, plus `maxHistory` option  
 
 ## API Reference
 
-For full details, see [API.md](./API.md).
+See [API.md](./API.md) for full details.
 
 ## Examples
 
-### Time-travel Keyboard Shortcuts
+### Keyboard Shortcuts
 
 ```ts
-const tl = flashback(appState)
-
 window.addEventListener('keydown', e => {
-    if (e.ctrlKey && e.key === 'z') tl.undo()
-    if (e.ctrlKey && e.key === 'y') tl.redo()
-})
-```
-
-### State Compression
-
-```ts
-const tl = flashback(initialState, async state => {
-    // Compress or prune before saving
-    return selectivelyKeep(state)
+  if (e.ctrlKey && e.key === 'z') tl.undo()
+  if (e.ctrlKey && e.key === 'y') tl.redo()
 })
 ```
 
 ## Code of Conduct
 
-We want everyone to feel welcome and be able to contribute. Please read our [Code of Conduct](./CODE_OF_CONDUCT.md) before getting started—thank you for helping us keep this community respectful and inclusive!
+Please read our [Code of Conduct](./CODE_OF_CONDUCT.md) to keep this community welcoming and inclusive.
 
 ## License
 
